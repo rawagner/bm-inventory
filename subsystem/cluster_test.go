@@ -3,6 +3,7 @@ package subsystem
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -33,6 +34,7 @@ var _ = Describe("Cluster tests", func() {
 			},
 		})
 		Expect(err).NotTo(HaveOccurred())
+		Expect(swag.StringValue(cluster.GetPayload().Status)).Should(Equal("insufficient"))
 	})
 
 	JustBeforeEach(func() {
@@ -124,6 +126,7 @@ var _ = Describe("system-test cluster install", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 		cluster = registerClusterReply.GetPayload()
+		//Expect(swag.StringValue(cluster.Status)).Should(Equal("insufficient"))
 	})
 
 	generateHWPostStepReply := func(h *models.Host, hwInfo *models.Introspection) {
@@ -150,6 +153,8 @@ var _ = Describe("system-test cluster install", func() {
 				CPU:    &models.CPU{Cpus: 16},
 				Memory: []*models.Memory{{Name: "Mem", Total: int64(32 * units.GiB)}},
 			}
+			//Expect(swag.StringValue(cluster.Status)).Should(Equal("insufficient"))
+
 			h1 := registerHost(clusterID)
 			generateHWPostStepReply(h1, hwInfo)
 			h2 := registerHost(clusterID)
@@ -158,8 +163,7 @@ var _ = Describe("system-test cluster install", func() {
 			generateHWPostStepReply(h3, hwInfo)
 			h4 := registerHost(clusterID)
 			generateHWPostStepReply(h4, hwInfo)
-
-			_, err := bmclient.Inventory.UpdateCluster(ctx, &inventory.UpdateClusterParams{
+			c, err := bmclient.Inventory.UpdateCluster(ctx, &inventory.UpdateClusterParams{
 				ClusterUpdateParams: &models.ClusterUpdateParams{HostsRoles: []*models.ClusterUpdateParamsHostsRolesItems0{
 					{ID: *h1.ID, Role: "master"},
 					{ID: *h2.ID, Role: "master"},
@@ -169,9 +173,11 @@ var _ = Describe("system-test cluster install", func() {
 				ClusterID: clusterID,
 			})
 			Expect(err).NotTo(HaveOccurred())
+			Expect(swag.StringValue(c.GetPayload().Status)).Should(Equal("ready"))
 		})
 
 		It("install cluster", func() {
+			fmt.Println(swag.StringValue(cluster.Status))
 			c, err := bmclient.Inventory.InstallCluster(ctx, &inventory.InstallClusterParams{ClusterID: clusterID})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(swag.StringValue(c.GetPayload().Status)).Should(Equal("installing"))
@@ -206,6 +212,95 @@ var _ = Describe("system-test cluster install", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(s.Size()).ShouldNot(Equal(0))
 		})
+	})
+	It("install_cluster_states", func() {
+		clusterID := *cluster.ID
+
+		hwInfo := &models.Introspection{
+			CPU:    &models.CPU{Cpus: 16},
+			Memory: []*models.Memory{{Name: "Mem", Total: int64(32 * units.GiB)}},
+		}
+		Expect(swag.StringValue(cluster.Status)).Should(Equal("insufficient"))
+
+		wh1 := registerHost(clusterID)
+		generateHWPostStepReply(wh1, hwInfo)
+		wh2 := registerHost(clusterID)
+		generateHWPostStepReply(wh2, hwInfo)
+		wh3 := registerHost(clusterID)
+		generateHWPostStepReply(wh3, hwInfo)
+
+		mh1 := registerHost(clusterID)
+		generateHWPostStepReply(mh1, hwInfo)
+		mh2 := registerHost(clusterID)
+		generateHWPostStepReply(mh2, hwInfo)
+		mh3 := registerHost(clusterID)
+		generateHWPostStepReply(mh3, hwInfo)
+
+		// All hosts are workers -> state must be insufficient
+		cluster, err := bmclient.Inventory.UpdateCluster(ctx, &inventory.UpdateClusterParams{
+			ClusterUpdateParams: &models.ClusterUpdateParams{HostsRoles: []*models.ClusterUpdateParamsHostsRolesItems0{
+				{ID: *wh1.ID, Role: "worker"},
+				{ID: *wh2.ID, Role: "worker"},
+				{ID: *wh3.ID, Role: "worker"},
+			}},
+			ClusterID: clusterID,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(swag.StringValue(cluster.GetPayload().Status)).Should(Equal("insufficient"))
+
+		// Only two masters -> state must be insufficient
+		_, err = bmclient.Inventory.UpdateCluster(ctx, &inventory.UpdateClusterParams{
+			ClusterUpdateParams: &models.ClusterUpdateParams{HostsRoles: []*models.ClusterUpdateParamsHostsRolesItems0{
+				{ID: *mh1.ID, Role: "master"},
+				{ID: *mh2.ID, Role: "master"},
+			}},
+			ClusterID: clusterID,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(swag.StringValue(cluster.GetPayload().Status)).Should(Equal("insufficient"))
+
+		// Three master hosts -> state must be ready
+		cluster, err = bmclient.Inventory.UpdateCluster(ctx, &inventory.UpdateClusterParams{
+			ClusterUpdateParams: &models.ClusterUpdateParams{HostsRoles: []*models.ClusterUpdateParamsHostsRolesItems0{
+				{ID: *mh3.ID, Role: "master"},
+			}},
+			ClusterID: clusterID,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(swag.StringValue(cluster.GetPayload().Status)).Should(Equal("ready"))
+
+		// Back to two master hosts -> state must be insufficient
+		cluster, err = bmclient.Inventory.UpdateCluster(ctx, &inventory.UpdateClusterParams{
+			ClusterUpdateParams: &models.ClusterUpdateParams{HostsRoles: []*models.ClusterUpdateParamsHostsRolesItems0{
+				{ID: *mh3.ID, Role: "worker"},
+			}},
+			ClusterID: clusterID,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(swag.StringValue(cluster.GetPayload().Status)).Should(Equal("insufficient"))
+
+		// Three master hosts -> state must be ready
+		cluster, err = bmclient.Inventory.UpdateCluster(ctx, &inventory.UpdateClusterParams{
+			ClusterUpdateParams: &models.ClusterUpdateParams{HostsRoles: []*models.ClusterUpdateParamsHostsRolesItems0{
+				{ID: *mh3.ID, Role: "master"},
+			}},
+			ClusterID: clusterID,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(swag.StringValue(cluster.GetPayload().Status)).Should(Equal("ready"))
+
+		// Back to two master hosts -> state must be insufficient
+		cluster, err = bmclient.Inventory.UpdateCluster(ctx, &inventory.UpdateClusterParams{
+			ClusterUpdateParams: &models.ClusterUpdateParams{HostsRoles: []*models.ClusterUpdateParamsHostsRolesItems0{
+				{ID: *mh3.ID, Role: "worker"},
+			}},
+			ClusterID: clusterID,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(swag.StringValue(cluster.GetPayload().Status)).Should(Equal("insufficient"))
+
+		_, err = bmclient.Inventory.DeregisterCluster(ctx, &inventory.DeregisterClusterParams{ClusterID: clusterID})
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("install_cluster_insufficient_master", func() {

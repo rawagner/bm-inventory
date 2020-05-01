@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/filanov/bm-inventory/internal/cluster"
+
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 
@@ -50,12 +52,13 @@ func strToUUID(s string) *strfmt.UUID {
 
 var _ = Describe("GenerateClusterISO", func() {
 	var (
-		bm      *bareMetalInventory
-		cfg     Config
-		db      *gorm.DB
-		ctx     = context.Background()
-		ctrl    *gomock.Controller
-		mockJob *job.MockAPI
+		bm             *bareMetalInventory
+		cfg            Config
+		db             *gorm.DB
+		ctx            = context.Background()
+		ctrl           *gomock.Controller
+		mockJob        *job.MockAPI
+		mockClusterAPI *cluster.MockAPI
 	)
 
 	BeforeEach(func() {
@@ -63,10 +66,12 @@ var _ = Describe("GenerateClusterISO", func() {
 		ctrl = gomock.NewController(GinkgoT())
 		db = prepareDB()
 		mockJob = job.NewMockAPI(ctrl)
-		bm = NewBareMetalInventory(db, getTestLog(), nil, cfg, mockJob)
+		mockClusterAPI = cluster.NewMockAPI(ctrl)
+		bm = NewBareMetalInventory(db, getTestLog(), nil, mockClusterAPI, cfg, mockJob)
 	})
 
 	registerCluster := func() *models.Cluster {
+		mockClusterAPI.EXPECT().RegisterCluster(gomock.Any(), gomock.Any())
 		reply := bm.RegisterCluster(ctx, inventory.RegisterClusterParams{
 			NewClusterParams: &models.ClusterCreateParams{Name: swag.String("some-cluster")},
 		})
