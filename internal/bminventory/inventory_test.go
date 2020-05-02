@@ -8,16 +8,14 @@ import (
 
 	"github.com/filanov/bm-inventory/internal/cluster"
 
-	"github.com/go-openapi/strfmt"
-	"github.com/google/uuid"
-
-	"github.com/go-openapi/swag"
-
 	"github.com/filanov/bm-inventory/internal/host"
 	"github.com/filanov/bm-inventory/models"
 	"github.com/filanov/bm-inventory/pkg/job"
 	"github.com/filanov/bm-inventory/restapi/operations/inventory"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/kelseyhightower/envconfig"
@@ -76,7 +74,6 @@ var _ = Describe("GenerateClusterISO", func() {
 			Base: models.Base{
 				ID: &clusterId,
 			},
-			Status: swag.String(ClusterStatusInsufficient),
 		}
 		Expect(db.Create(&cluster).Error).ShouldNot(HaveOccurred())
 		return &cluster

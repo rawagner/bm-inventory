@@ -66,7 +66,7 @@ func (i *insufficientState) RefreshStatus(ctx context.Context, c *models.Cluster
 	}
 
 	if clusterIsReady {
-		return updateState(clusterStatusReady, c, db)
+		return updateState(clusterStatusReady, c, db, i.log)
 	} else {
 		i.log.Infof("Cluster %s does not have sufficient resources to be installed.", c.ID)
 		return &UpdateReply{

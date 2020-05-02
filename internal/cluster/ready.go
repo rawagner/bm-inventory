@@ -40,13 +40,13 @@ func (r *readyState) RefreshStatus(ctx context.Context, c *models.Cluster, db *g
 			IsChanged: false,
 		}, nil
 	} else {
-		return updateState(clusterStatusInsufficient, c, db)
+		return updateState(clusterStatusInsufficient, c, db, r.log)
 
 	}
 }
 
 func (r *readyState) Install(ctx context.Context, c *models.Cluster) (*UpdateReply, error) {
-	return updateState(clusterStatusInstalling, c, r.db)
+	return updateState(clusterStatusInstalling, c, r.db, r.log)
 }
 
 func (r *readyState) DeregisterCluster(ctx context.Context, c *models.Cluster) (*UpdateReply, error) {

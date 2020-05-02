@@ -28,7 +28,7 @@ type baseState struct {
 	db  *gorm.DB           //nolint:structcheck
 }
 
-func updateState(state string, c *models.Cluster, db *gorm.DB) (*UpdateReply, error) {
+func updateState(state string, c *models.Cluster, db *gorm.DB, log logrus.FieldLogger) (*UpdateReply, error) {
 	dbReply := db.Model(&models.Cluster{}).Where("id = ? and status = ?",
 		c.ID.String(), swag.StringValue(c.Status)).Update("status", state)
 	if dbReply.Error != nil {
@@ -39,6 +39,7 @@ func updateState(state string, c *models.Cluster, db *gorm.DB) (*UpdateReply, er
 		return nil, errors.Errorf("failed to update cluster %s state from %s to %s, nothing have changed",
 			c.ID.String(), swag.StringValue(c.Status), state)
 	}
+	log.Infof("updated cluster %s from state <%s> to state <%s>", c.ID.String(), swag.StringValue(c.Status), state)
 	return &UpdateReply{
 		State:     state,
 		IsChanged: state != swag.StringValue(c.Status),

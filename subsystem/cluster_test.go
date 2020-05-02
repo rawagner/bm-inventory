@@ -3,7 +3,6 @@ package subsystem
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -126,7 +125,6 @@ var _ = Describe("system-test cluster install", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 		cluster = registerClusterReply.GetPayload()
-		//Expect(swag.StringValue(cluster.Status)).Should(Equal("insufficient"))
 	})
 
 	generateHWPostStepReply := func(h *models.Host, hwInfo *models.Introspection) {
@@ -153,7 +151,6 @@ var _ = Describe("system-test cluster install", func() {
 				CPU:    &models.CPU{Cpus: 16},
 				Memory: []*models.Memory{{Name: "Mem", Total: int64(32 * units.GiB)}},
 			}
-			//Expect(swag.StringValue(cluster.Status)).Should(Equal("insufficient"))
 
 			h1 := registerHost(clusterID)
 			generateHWPostStepReply(h1, hwInfo)
@@ -177,7 +174,6 @@ var _ = Describe("system-test cluster install", func() {
 		})
 
 		It("install cluster", func() {
-			fmt.Println(swag.StringValue(cluster.Status))
 			c, err := bmclient.Inventory.InstallCluster(ctx, &inventory.InstallClusterParams{ClusterID: clusterID})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(swag.StringValue(c.GetPayload().Status)).Should(Equal("installing"))

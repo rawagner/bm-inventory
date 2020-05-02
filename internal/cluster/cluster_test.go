@@ -73,9 +73,9 @@ func prepareDB() *gorm.DB {
 	return db
 }
 
-func TestSubsystem(t *testing.T) {
+func Test(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "host state machine tests")
+	RunSpecs(t, "cluster state machine tests")
 }
 
 func getTestLog() logrus.FieldLogger {
