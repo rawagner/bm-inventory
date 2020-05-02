@@ -71,12 +71,15 @@ var _ = Describe("GenerateClusterISO", func() {
 	})
 
 	registerCluster := func() *models.Cluster {
-		mockClusterAPI.EXPECT().RegisterCluster(gomock.Any(), gomock.Any())
-		reply := bm.RegisterCluster(ctx, inventory.RegisterClusterParams{
-			NewClusterParams: &models.ClusterCreateParams{Name: swag.String("some-cluster")},
-		})
-		Expect(reply).Should(BeAssignableToTypeOf(inventory.NewRegisterClusterCreated()))
-		return reply.(*inventory.RegisterClusterCreated).Payload
+		clusterId := strfmt.UUID(uuid.New().String())
+		cluster := models.Cluster{
+			Base: models.Base{
+				ID: &clusterId,
+			},
+			Status: swag.String(ClusterStatusInsufficient),
+		}
+		Expect(db.Create(&cluster).Error).ShouldNot(HaveOccurred())
+		return &cluster
 	}
 
 	It("success", func() {
