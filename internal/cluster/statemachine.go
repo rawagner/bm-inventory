@@ -11,6 +11,7 @@ import (
 )
 
 //go:generate mockgen -source=statemachine.go -package=cluster -destination=mock_cluster_api.go
+
 type API interface {
 	// Register a new cluster
 	RegisterCluster(ctx context.Context, c *models.Cluster) (*UpdateReply, error)
@@ -21,6 +22,8 @@ type API interface {
 	//deregister cluster
 	DeregisterCluster(ctx context.Context, c *models.Cluster) (*UpdateReply, error)
 }
+
+var _ API = (*State)(nil)
 
 type State struct {
 	insufficient API

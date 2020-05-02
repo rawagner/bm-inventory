@@ -20,6 +20,8 @@ func NewInsufficientState(log logrus.FieldLogger, db *gorm.DB) *insufficientStat
 
 type insufficientState baseState
 
+var _ API = (*State)(nil)
+
 func (i *insufficientState) RegisterCluster(ctx context.Context, c *models.Cluster) (*UpdateReply, error) {
 	tx := i.db.Begin()
 	defer func() {
