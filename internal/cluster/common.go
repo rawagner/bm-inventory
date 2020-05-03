@@ -46,16 +46,15 @@ func updateState(state string, c *models.Cluster, db *gorm.DB, log logrus.FieldL
 	}, nil
 }
 
-func getMastersNodesIds(c *models.Cluster, db *gorm.DB) ([]*strfmt.UUID, error) {
+func getKnownMastersNodesIds(c *models.Cluster, db *gorm.DB) ([]*strfmt.UUID, error) {
 
 	var cluster models.Cluster
 	var masterNodesIds []*strfmt.UUID
-
 	if err := db.Preload("Hosts").First(&cluster, "id = ?", c.ID).Error; err != nil {
 		return nil, errors.Errorf("cluster %s not found", c.ID)
 	}
 	for _, host := range cluster.Hosts {
-		if host.Role == "master" {
+		if host.Role == "master" && swag.StringValue(host.Status) == "known" {
 			masterNodesIds = append(masterNodesIds, host.ID)
 		}
 	}
@@ -63,13 +62,13 @@ func getMastersNodesIds(c *models.Cluster, db *gorm.DB) ([]*strfmt.UUID, error) 
 }
 
 func isClusterReady(c *models.Cluster, db *gorm.DB, log logrus.FieldLogger) (bool, error) {
-	masterNodesIds, err := getMastersNodesIds(c, db)
+	masterNodesIds, err := getKnownMastersNodesIds(c, db)
 	if err != nil {
 		return false, errors.Errorf("unable to determine cluster %s hosts state ", c.ID)
 	}
 	minimumMasterNodes := 3
 	if len(masterNodesIds) < minimumMasterNodes {
-		log.Infof("cluster %s has %d master hosts which is less then the %d minimum needed for cluster installation",
+		log.Infof("cluster %s has %d known master hosts which is less then the %d minimum needed for cluster installation",
 			c.ID, len(masterNodesIds), minimumMasterNodes)
 		return false, nil
 	} else {
