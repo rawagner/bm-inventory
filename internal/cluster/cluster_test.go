@@ -30,7 +30,7 @@ var _ = Describe("statemachine", func() {
 
 	BeforeEach(func() {
 		db = prepareDB()
-		state = NewState(getTestLog(), db)
+		state = NewManager(getTestLog(), db)
 		id := strfmt.UUID(uuid.New().String())
 		cluster = models.Cluster{
 			Base: models.Base{
@@ -42,10 +42,6 @@ var _ = Describe("statemachine", func() {
 	})
 
 	Context("unknown_cluster_state", func() {
-		It("register_cluster", func() {
-			stateReply, stateErr = state.RegisterCluster(ctx, &cluster)
-		})
-
 		It("update_cluster", func() {
 			stateReply, stateErr = state.RefreshStatus(ctx, &cluster, db)
 		})

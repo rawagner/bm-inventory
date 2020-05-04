@@ -20,12 +20,7 @@ func NewErrorState(log logrus.FieldLogger, db *gorm.DB) *errorState {
 
 type errorState baseState
 
-var _ API = (*State)(nil)
-
-func (e *errorState) RegisterCluster(ctx context.Context, c *models.Cluster) (*UpdateReply, error) {
-	return nil, errors.Errorf("unable to register cluster <%s> in <%s> status",
-		c.ID, swag.StringValue(c.Status))
-}
+//var _ StateAPI = (*State)(nil)
 
 func (e *errorState) RefreshStatus(ctx context.Context, c *models.Cluster, db *gorm.DB) (*UpdateReply, error) {
 	return &UpdateReply{

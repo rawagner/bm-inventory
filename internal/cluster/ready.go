@@ -6,7 +6,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/filanov/bm-inventory/models"
-	"github.com/go-openapi/swag"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
@@ -20,12 +19,7 @@ func NewReadyState(log logrus.FieldLogger, db *gorm.DB) *readyState {
 
 type readyState baseState
 
-var _ API = (*State)(nil)
-
-func (r *readyState) RegisterCluster(ctx context.Context, c *models.Cluster) (*UpdateReply, error) {
-	return nil, errors.Errorf("unable to register cluster <%s> in <%s> status",
-		c.ID, swag.StringValue(c.Status))
-}
+var _ StateAPI = (*Manager)(nil)
 
 func (r *readyState) RefreshStatus(ctx context.Context, c *models.Cluster, db *gorm.DB) (*UpdateReply, error) {
 	clusterIsReady, err := isClusterReady(c, db, r.log)

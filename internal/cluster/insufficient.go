@@ -20,44 +20,6 @@ func NewInsufficientState(log logrus.FieldLogger, db *gorm.DB) *insufficientStat
 
 type insufficientState baseState
 
-var _ API = (*State)(nil)
-
-func (i *insufficientState) RegisterCluster(ctx context.Context, c *models.Cluster) (*UpdateReply, error) {
-	tx := i.db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			i.log.Error("update cluster failed")
-			tx.Rollback()
-		}
-	}()
-	if tx.Error != nil {
-		i.log.WithError(tx.Error).Error("failed to start transaction")
-	}
-
-	if err := tx.Preload("Hosts").Create(c).Error; err != nil {
-		i.log.Errorf("Error registering cluster %s", c.Name)
-		tx.Rollback()
-		return &UpdateReply{
-			State:     clusterStatusInsufficient,
-			IsChanged: false,
-		}, err
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		i.log.WithError(err).Errorf("failed to commit cluster %s changes on installation", c.ID.String())
-		return &UpdateReply{
-			State:     clusterStatusInsufficient,
-			IsChanged: false,
-		}, err
-	}
-
-	return &UpdateReply{
-		State:     clusterStatusInsufficient,
-		IsChanged: true,
-	}, nil
-}
-
 func (i *insufficientState) RefreshStatus(ctx context.Context, c *models.Cluster, db *gorm.DB) (*UpdateReply, error) {
 
 	clusterIsReady, err := isClusterReady(c, db, i.log)

@@ -74,7 +74,7 @@ func main() {
 	}
 
 	hostApi := host.NewManager(log.WithField("pkg", "host-state"), db, hardware.NewValidator(Options.HWValidatorConfig))
-	clusterApi := cluster.NewState(log.WithField("pkg", "cluster-state"), db)
+	clusterApi := cluster.NewManager(log.WithField("pkg", "cluster-state"), db)
 	jobApi := job.New(log.WithField("pkg", "k8s-job-wrapper"), kclient, Options.JobConfig)
 	bm := bminventory.NewBareMetalInventory(db, log.WithField("pkg", "Inventory"), hostApi, clusterApi, Options.BMConfig, jobApi)
 	h, err := restapi.Handler(restapi.Config{

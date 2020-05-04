@@ -27,7 +27,8 @@ var _ = Describe("insufficient_state", func() {
 
 	BeforeEach(func() {
 		db = prepareDB()
-		state = &State{insufficient: NewInsufficientState(getTestLog(), db)}
+		state = &Manager{insufficient: NewInsufficientState(getTestLog(), db)}
+		registerManager := NewRegistrar(getTestLog(), db)
 
 		id = strfmt.UUID(uuid.New().String())
 		cluster = models.Cluster{
@@ -37,12 +38,11 @@ var _ = Describe("insufficient_state", func() {
 			Status: swag.String(currentState),
 		}
 
-		updateReply, updateErr = state.RegisterCluster(ctx, &cluster)
+		updateReply, updateErr = registerManager.RegisterCluster(ctx, &cluster)
 		Expect(updateErr).Should(BeNil())
 		Expect(updateReply.State).Should(Equal(clusterStatusInsufficient))
 		c := geCluster(*cluster.ID, db)
 		Expect(swag.StringValue(c.Status)).Should(Equal(clusterStatusInsufficient))
-		//})
 	})
 
 	Context("refresh_state", func() {
