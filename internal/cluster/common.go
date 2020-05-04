@@ -86,9 +86,11 @@ func deregisterCluster(c *models.Cluster, db *gorm.DB) (*UpdateReply, error) {
 		}
 	}()
 
-	if txErr = tx.Where("cluster_id = ?", c.ID).Delete(&models.Host{}).Error; txErr != nil {
-		tx.Rollback()
-		return nil, errors.Errorf("failed to deregister host while unregistering cluster %s", c.ID)
+	for j := range c.Hosts {
+		if txErr = tx.Where("id = ? and cluster_id = ?", c.Hosts[j], c.ID).Delete(&models.Host{}).Error; txErr != nil {
+			tx.Rollback()
+			return nil, errors.Errorf("failed to deregister host %s while unregistering cluster %s", c.Hosts[j].ID, c.ID)
+		}
 	}
 
 	if txErr = tx.Delete(c).Error; txErr != nil {
