@@ -70,6 +70,7 @@ func prepareDB() *gorm.DB {
 	db, err := gorm.Open("sqlite3", ":memory:")
 	Expect(err).ShouldNot(HaveOccurred())
 	db.AutoMigrate(&models.Cluster{})
+	db.AutoMigrate(&models.Host{})
 	return db
 }
 
@@ -82,4 +83,27 @@ func getTestLog() logrus.FieldLogger {
 	l := logrus.New()
 	l.SetOutput(ioutil.Discard)
 	return l
+}
+
+func geCluster(clusterId strfmt.UUID, db *gorm.DB) *models.Cluster {
+	var cluster models.Cluster
+	Expect(db.First(&cluster, "id = ?", clusterId).Error).ShouldNot(HaveOccurred())
+	return &cluster
+}
+func addInstallationRequirements(clusterId strfmt.UUID, db *gorm.DB) {
+	var hostId strfmt.UUID
+	var host models.Host
+	for i := 0; i < 3; i++ {
+		hostId = strfmt.UUID(uuid.New().String())
+		host = models.Host{
+			Base: models.Base{
+				ID: &hostId,
+			},
+			ClusterID: clusterId,
+			Role:      "master",
+			Status:    swag.String("known"),
+		}
+		Expect(db.Create(&host).Error).ShouldNot(HaveOccurred())
+
+	}
 }
