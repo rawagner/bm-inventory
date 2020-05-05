@@ -20,8 +20,6 @@ func NewErrorState(log logrus.FieldLogger, db *gorm.DB) *errorState {
 
 type errorState baseState
 
-//var _ StateAPI = (*State)(nil)
-
 func (e *errorState) RefreshStatus(ctx context.Context, c *models.Cluster, db *gorm.DB) (*UpdateReply, error) {
 	return &UpdateReply{
 		State:     clusterStatusError,
