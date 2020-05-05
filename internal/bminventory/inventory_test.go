@@ -152,7 +152,7 @@ var _ = Describe("GetNextSteps", func() {
 		ctrl = gomock.NewController(GinkgoT())
 		db = prepareDB()
 		mockHostApi = host.NewMockAPI(ctrl)
-		bm = NewBareMetalInventory(db, getTestLog(), mockHostApi, cfg, nil)
+		bm = NewBareMetalInventory(db, getTestLog(), mockHostApi, nil, cfg, nil)
 	})
 
 	It("get_next_steps_unknown_host", func() {
