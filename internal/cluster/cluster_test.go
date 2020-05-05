@@ -83,7 +83,7 @@ func getTestLog() logrus.FieldLogger {
 
 func geCluster(clusterId strfmt.UUID, db *gorm.DB) *models.Cluster {
 	var cluster models.Cluster
-	Expect(db.First(&cluster, "id = ?", clusterId).Error).ShouldNot(HaveOccurred())
+	Expect(db.Preload("Hosts").First(&cluster, "id = ?", clusterId).Error).ShouldNot(HaveOccurred())
 	return &cluster
 }
 func addInstallationRequirements(clusterId strfmt.UUID, db *gorm.DB) {
