@@ -435,11 +435,12 @@ func (b *bareMetalInventory) generateClusterInstallConfig(ctx context.Context, c
 
 func (b *bareMetalInventory) addInstallCommand(ctx context.Context, masterNodesIds []*strfmt.UUID,
 	log logrus.FieldLogger, params inventory.InstallClusterParams, cluster models.Cluster) error {
-	// set one of the master nodes as bootstrap
-	bootstrapId := masterNodesIds[len(masterNodesIds)-1]
-	log.Debugf("Bootstrap ID is %s", bootstrapId)
 
 	const cmdTmpl = `sudo podman run -v /dev:/dev:rw -v /opt:/opt:rw --privileged --pid=host  {{.INSTALLER}} --role {{.ROLE}}  --cluster-id {{.CLUSTER_ID}}  --host {{.HOST}} --port {{.PORT}} --boot-device {{.BOOT_DEVICE}} --host-id {{.HOST_ID}}`
+
+	// set one of the master nodes as bootstrap
+	bootstrapId := masterNodesIds[len(masterNodesIds)-1]
+	log.Infof("Bootstrap ID is %s", bootstrapId)
 
 	t, err := template.New("cmd").Parse(cmdTmpl)
 	if err != nil {
@@ -454,27 +455,30 @@ func (b *bareMetalInventory) addInstallCommand(ctx context.Context, masterNodesI
 		"INSTALLER":   b.Config.InstallerImage,
 		"BOOT_DEVICE": "",
 	}
-	for i := range cluster.Hosts {
-		role := cluster.Hosts[i].Role
-		if cluster.Hosts[i].ID == bootstrapId {
+	for _, h := range cluster.Hosts {
+		role := h.Role
+		if h.ID.String() == bootstrapId.String() {
 			role = bootstrap
 		}
 		data["ROLE"] = role
-		disks, err := b.hostApi.GetHostValidDisks(cluster.Hosts[i])
+		disks, err := b.hostApi.GetHostValidDisks(h)
 		if err != nil {
-			log.Errorf("Failed to get valid disks on host with id %s", cluster.Hosts[i].ID)
+			log.Errorf("Failed to get valid disks on host with id %s", h.ID)
 			return err
 		}
 		data["BOOT_DEVICE"] = fmt.Sprintf("/dev/%s", disks[0].Name)
-		data["HOST_ID"] = string(*cluster.Hosts[i].ID)
+		data["HOST_ID"] = string(*h.ID)
 		buf := &bytes.Buffer{}
+
+		log.Infof("host installation data : %s", data)
+
 		if err := t.Execute(buf, data); err != nil {
 			return err
 		}
 		command := buf.String()
 		b.SetDebugStep(ctx, inventory.SetDebugStepParams{
 			ClusterID: params.ClusterID,
-			HostID:    *cluster.Hosts[i].ID,
+			HostID:    *h.ID,
 			Step:      &models.DebugStep{Command: &command},
 		})
 	}
