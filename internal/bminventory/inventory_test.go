@@ -283,8 +283,7 @@ var _ = Describe("cluster", func() {
 		clusterID      strfmt.UUID
 	)
 
-	addHost := func(role string, state string, clusterId strfmt.UUID, db *gorm.DB) models.Host {
-		hostId := strfmt.UUID(uuid.New().String())
+	addHost := func(hostId strfmt.UUID, role string, state string, clusterId strfmt.UUID, db *gorm.DB) models.Host {
 		host := models.Host{
 			Base: models.Base{
 				ID: &hostId,
@@ -338,9 +337,9 @@ var _ = Describe("cluster", func() {
 			}).Error
 			Expect(err).ShouldNot(HaveOccurred())
 
-			for i := 0; i < 3; i++ {
-				addHost("master", "known", clusterID, db)
-			}
+			addHost(masterHostId1, "master", "known", clusterID, db)
+			addHost(masterHostId2, "master", "known", clusterID, db)
+			addHost(masterHostId3, "master", "known", clusterID, db)
 		})
 
 		It("success", func() {
