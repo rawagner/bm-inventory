@@ -151,18 +151,14 @@ paths:
           schema:
             $ref: '#/definitions/image-create-params'
       responses:
-        201:
-          description: Created ISO
-          schema:
-            type: object
-            properties:
-              imageId:
-                type: string
-                format: uuid
+        204:
+          description: Success.
         400:
           description: Invalid input
         404:
           description: Cluster not found
+        409:
+          description: Conflict
         500:
           description: Internal server error
 
@@ -178,12 +174,6 @@ paths:
         - in: path
           name: clusterId
           description: The ID of the cluster whose ISO to download
-          type: string
-          format: uuid
-          required: true
-        - in: query
-          name: imageId
-          description: The ID of a previously-created image
           type: string
           format: uuid
           required: true
@@ -823,6 +813,20 @@ definitions:
             type: string
             enum: ['4.4']
             description: OpenShift cluster version
+          image_info:
+            type: object
+            properties:
+              proxy_url:
+                type: string
+                description: |
+                  The URL of the HTTP/S proxy that agents should use to access the discovery service
+                  http://\<user\>:\<password\>@\<server\>:\<port\>/
+              ssh_public_key:
+                type: string
+                description: SSH public key for debugging the installation
+              created_at:
+                type: string
+                format: date-time
           baseDnsDomain:
             type: string
             description: The base domain of the cluster. All DNS records must be sub-domains of this base and include the cluster name.
