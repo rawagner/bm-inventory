@@ -1,7 +1,7 @@
 package cluster
 
 import (
-	context "context"
+	"context"
 	"io/ioutil"
 	"testing"
 
@@ -14,11 +14,12 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/filanov/bm-inventory/models"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("statemachine", func() {
+var _ = Describe("stateMachine", func() {
 	var (
 		ctx        = context.Background()
 		db         *gorm.DB
@@ -49,12 +50,116 @@ var _ = Describe("statemachine", func() {
 		})
 
 		AfterEach(func() {
+			db.Close()
 			Expect(stateReply).To(BeNil())
 			Expect(stateErr).Should(HaveOccurred())
 		})
 	})
 
 })
+
+/*
+All supported case options:
+installing -> installing
+installing -> installed
+installing -> error
+*/
+
+var _ = Describe("cluster monitor", func() {
+	var (
+		//ctx        = context.Background()
+		db         *gorm.DB
+		c          models.Cluster
+		id         strfmt.UUID
+		err        error
+		clusterApi *Manager
+	)
+
+	BeforeEach(func() {
+		db = prepareDB()
+		id = strfmt.UUID(uuid.New().String())
+		c = models.Cluster{
+			ID:     &id,
+			Status: swag.String("installing"),
+		}
+
+		Expect(db.Create(&c).Error).ShouldNot(HaveOccurred())
+		clusterApi = NewManager(getTestLog().WithField("pkg", "cluster-monitor"), db)
+
+		Expect(err).ShouldNot(HaveOccurred())
+	})
+
+	Context("from installing state", func() {
+
+		It("installing -> installing", func() {
+			createHost(id, "installing", db)
+			createHost(id, "installing", db)
+			createHost(id, "installing", db)
+			clusterApi.ClusterMonitoring()
+			c = geCluster(id, db)
+			Expect(c.Status).Should(Equal(swag.String("installing")))
+		})
+		It("installing -> installing (some hosts are installed)", func() {
+			createHost(id, "installing", db)
+			createHost(id, "installed", db)
+			createHost(id, "installed", db)
+
+			clusterApi.ClusterMonitoring()
+			c = geCluster(id, db)
+			Expect(c.Status).Should(Equal(swag.String("installing")))
+		})
+		It("installing -> installed", func() {
+			createHost(id, "installed", db)
+			createHost(id, "installed", db)
+			createHost(id, "installed", db)
+
+			clusterApi.ClusterMonitoring()
+			c = geCluster(id, db)
+			Expect(c.Status).Should(Equal(swag.String("installed")))
+		})
+		It("installing -> error", func() {
+			createHost(id, "error", db)
+			createHost(id, "installed", db)
+			createHost(id, "installed", db)
+
+			clusterApi.ClusterMonitoring()
+			c = geCluster(id, db)
+			Expect(c.Status).Should(Equal(swag.String("error")))
+		})
+		It("installing -> error", func() {
+			createHost(id, "installed", db)
+			createHost(id, "installed", db)
+
+			clusterApi.ClusterMonitoring()
+			c = geCluster(id, db)
+			Expect(c.Status).Should(Equal(swag.String("error")))
+		})
+		It("installing -> error insufficient hosys", func() {
+			createHost(id, "installing", db)
+			createHost(id, "installed", db)
+
+			clusterApi.ClusterMonitoring()
+			c = geCluster(id, db)
+			Expect(c.Status).Should(Equal(swag.String("error")))
+		})
+
+		AfterEach(func() {
+			db.Close()
+		})
+	})
+
+})
+
+func createHost(clusterId strfmt.UUID, state string, db *gorm.DB) {
+	hostId := strfmt.UUID(uuid.New().String())
+	host := models.Host{
+		ID:        &hostId,
+		ClusterID: clusterId,
+		Role:      "master",
+		Status:    swag.String(state),
+	}
+	Expect(db.Create(&host).Error).ShouldNot(HaveOccurred())
+}
 
 func prepareDB() *gorm.DB {
 	db, err := gorm.Open("sqlite3", ":memory:")
