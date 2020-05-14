@@ -38,7 +38,7 @@ type API interface {
 	EnableHost(ctx context.Context, params *EnableHostParams) (*EnableHostNoContent, error)
 	/*
 	   GenerateClusterISO creates a new open shift per cluster discovery i s o*/
-	GenerateClusterISO(ctx context.Context, params *GenerateClusterISOParams) (*GenerateClusterISOCreated, error)
+	GenerateClusterISO(ctx context.Context, params *GenerateClusterISOParams) (*GenerateClusterISONoContent, error)
 	/*
 	   GetCluster retrieves open shift bare metal cluster information*/
 	GetCluster(ctx context.Context, params *GetClusterParams) (*GetClusterOK, error)
@@ -242,7 +242,7 @@ func (a *Client) EnableHost(ctx context.Context, params *EnableHostParams) (*Ena
 /*
 GenerateClusterISO creates a new open shift per cluster discovery i s o
 */
-func (a *Client) GenerateClusterISO(ctx context.Context, params *GenerateClusterISOParams) (*GenerateClusterISOCreated, error) {
+func (a *Client) GenerateClusterISO(ctx context.Context, params *GenerateClusterISOParams) (*GenerateClusterISONoContent, error) {
 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "GenerateClusterISO",
@@ -259,7 +259,7 @@ func (a *Client) GenerateClusterISO(ctx context.Context, params *GenerateCluster
 	if err != nil {
 		return nil, err
 	}
-	return result.(*GenerateClusterISOCreated), nil
+	return result.(*GenerateClusterISONoContent), nil
 
 }
 

@@ -153,15 +153,15 @@ func (_m *MockAPI) EnableHost(ctx context.Context, params *EnableHostParams) (*E
 }
 
 // GenerateClusterISO provides a mock function with given fields: ctx, params
-func (_m *MockAPI) GenerateClusterISO(ctx context.Context, params *GenerateClusterISOParams) (*GenerateClusterISOCreated, error) {
+func (_m *MockAPI) GenerateClusterISO(ctx context.Context, params *GenerateClusterISOParams) (*GenerateClusterISONoContent, error) {
 	ret := _m.Called(ctx, params)
 
-	var r0 *GenerateClusterISOCreated
-	if rf, ok := ret.Get(0).(func(context.Context, *GenerateClusterISOParams) *GenerateClusterISOCreated); ok {
+	var r0 *GenerateClusterISONoContent
+	if rf, ok := ret.Get(0).(func(context.Context, *GenerateClusterISOParams) *GenerateClusterISONoContent); ok {
 		r0 = rf(ctx, params)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*GenerateClusterISOCreated)
+			r0 = ret.Get(0).(*GenerateClusterISONoContent)
 		}
 	}
 

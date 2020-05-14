@@ -309,14 +309,6 @@ func init() {
             "name": "clusterId",
             "in": "path",
             "required": true
-          },
-          {
-            "type": "string",
-            "format": "uuid",
-            "description": "The ID of a previously-created image",
-            "name": "imageId",
-            "in": "query",
-            "required": true
           }
         ],
         "responses": {
@@ -364,23 +356,17 @@ func init() {
           }
         ],
         "responses": {
-          "201": {
-            "description": "Created ISO",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "imageId": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              }
-            }
+          "204": {
+            "description": "Success."
           },
           "400": {
             "description": "Invalid input"
           },
           "404": {
             "description": "Cluster not found"
+          },
+          "409": {
+            "description": "Conflict"
           },
           "500": {
             "description": "Internal server error"
@@ -914,6 +900,23 @@ func init() {
                 "$ref": "#/definitions/host"
               },
               "x-go-custom-tag": "gorm:\"foreignkey:ClusterID;association_foreignkey:ID\""
+            },
+            "image_info": {
+              "type": "object",
+              "properties": {
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "proxy_url": {
+                  "description": "The URL of the HTTP/S proxy that agents should use to access the discovery service\nhttp://\\\u003cuser\\\u003e:\\\u003cpassword\\\u003e@\\\u003cserver\\\u003e:\\\u003cport\\\u003e/\n",
+                  "type": "string"
+                },
+                "ssh_public_key": {
+                  "description": "SSH public key for debugging the installation",
+                  "type": "string"
+                }
+              }
             },
             "ingressVip": {
               "description": "Virtual IP used for cluster ingress traffic",
@@ -1789,14 +1792,6 @@ func init() {
             "name": "clusterId",
             "in": "path",
             "required": true
-          },
-          {
-            "type": "string",
-            "format": "uuid",
-            "description": "The ID of a previously-created image",
-            "name": "imageId",
-            "in": "query",
-            "required": true
           }
         ],
         "responses": {
@@ -1844,23 +1839,17 @@ func init() {
           }
         ],
         "responses": {
-          "201": {
-            "description": "Created ISO",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "imageId": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              }
-            }
+          "204": {
+            "description": "Success."
           },
           "400": {
             "description": "Invalid input"
           },
           "404": {
             "description": "Cluster not found"
+          },
+          "409": {
+            "description": "Conflict"
           },
           "500": {
             "description": "Internal server error"
@@ -2275,6 +2264,23 @@ func init() {
     }
   },
   "definitions": {
+    "ClusterAO1ImageInfo": {
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "proxy_url": {
+          "description": "The URL of the HTTP/S proxy that agents should use to access the discovery service\nhttp://\\\u003cuser\\\u003e:\\\u003cpassword\\\u003e@\\\u003cserver\\\u003e:\\\u003cport\\\u003e/\n",
+          "type": "string"
+        },
+        "ssh_public_key": {
+          "description": "SSH public key for debugging the installation",
+          "type": "string"
+        }
+      }
+    },
     "ClusterUpdateParamsHostsRolesItems0": {
       "type": "object",
       "properties": {
@@ -2410,6 +2416,23 @@ func init() {
                 "$ref": "#/definitions/host"
               },
               "x-go-custom-tag": "gorm:\"foreignkey:ClusterID;association_foreignkey:ID\""
+            },
+            "image_info": {
+              "type": "object",
+              "properties": {
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "proxy_url": {
+                  "description": "The URL of the HTTP/S proxy that agents should use to access the discovery service\nhttp://\\\u003cuser\\\u003e:\\\u003cpassword\\\u003e@\\\u003cserver\\\u003e:\\\u003cport\\\u003e/\n",
+                  "type": "string"
+                },
+                "ssh_public_key": {
+                  "description": "SSH public key for debugging the installation",
+                  "type": "string"
+                }
+              }
             },
             "ingressVip": {
               "description": "Virtual IP used for cluster ingress traffic",

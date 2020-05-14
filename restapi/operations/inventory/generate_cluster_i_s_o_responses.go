@@ -11,48 +11,28 @@ import (
 	"github.com/go-openapi/runtime"
 )
 
-// GenerateClusterISOCreatedCode is the HTTP code returned for type GenerateClusterISOCreated
-const GenerateClusterISOCreatedCode int = 201
+// GenerateClusterISONoContentCode is the HTTP code returned for type GenerateClusterISONoContent
+const GenerateClusterISONoContentCode int = 204
 
-/*GenerateClusterISOCreated Created ISO
+/*GenerateClusterISONoContent Success.
 
-swagger:response generateClusterISOCreated
+swagger:response generateClusterISONoContent
 */
-type GenerateClusterISOCreated struct {
-
-	/*
-	  In: Body
-	*/
-	Payload *GenerateClusterISOCreatedBody `json:"body,omitempty"`
+type GenerateClusterISONoContent struct {
 }
 
-// NewGenerateClusterISOCreated creates GenerateClusterISOCreated with default headers values
-func NewGenerateClusterISOCreated() *GenerateClusterISOCreated {
+// NewGenerateClusterISONoContent creates GenerateClusterISONoContent with default headers values
+func NewGenerateClusterISONoContent() *GenerateClusterISONoContent {
 
-	return &GenerateClusterISOCreated{}
-}
-
-// WithPayload adds the payload to the generate cluster i s o created response
-func (o *GenerateClusterISOCreated) WithPayload(payload *GenerateClusterISOCreatedBody) *GenerateClusterISOCreated {
-	o.Payload = payload
-	return o
-}
-
-// SetPayload sets the payload to the generate cluster i s o created response
-func (o *GenerateClusterISOCreated) SetPayload(payload *GenerateClusterISOCreatedBody) {
-	o.Payload = payload
+	return &GenerateClusterISONoContent{}
 }
 
 // WriteResponse to the client
-func (o *GenerateClusterISOCreated) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+func (o *GenerateClusterISONoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.WriteHeader(201)
-	if o.Payload != nil {
-		payload := o.Payload
-		if err := producer.Produce(rw, payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
-	}
+	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
+
+	rw.WriteHeader(204)
 }
 
 // GenerateClusterISOBadRequestCode is the HTTP code returned for type GenerateClusterISOBadRequest
@@ -101,6 +81,30 @@ func (o *GenerateClusterISONotFound) WriteResponse(rw http.ResponseWriter, produ
 	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
 
 	rw.WriteHeader(404)
+}
+
+// GenerateClusterISOConflictCode is the HTTP code returned for type GenerateClusterISOConflict
+const GenerateClusterISOConflictCode int = 409
+
+/*GenerateClusterISOConflict Conflict
+
+swagger:response generateClusterISOConflict
+*/
+type GenerateClusterISOConflict struct {
+}
+
+// NewGenerateClusterISOConflict creates GenerateClusterISOConflict with default headers values
+func NewGenerateClusterISOConflict() *GenerateClusterISOConflict {
+
+	return &GenerateClusterISOConflict{}
+}
+
+// WriteResponse to the client
+func (o *GenerateClusterISOConflict) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
+
+	rw.WriteHeader(409)
 }
 
 // GenerateClusterISOInternalServerErrorCode is the HTTP code returned for type GenerateClusterISOInternalServerError

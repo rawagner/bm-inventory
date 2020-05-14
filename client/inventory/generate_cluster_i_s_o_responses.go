@@ -7,13 +7,9 @@ package inventory
 
 import (
 	"fmt"
-	"io"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
-	"github.com/go-openapi/validate"
 )
 
 // GenerateClusterISOReader is a Reader for the GenerateClusterISO structure.
@@ -24,8 +20,8 @@ type GenerateClusterISOReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *GenerateClusterISOReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
-	case 201:
-		result := NewGenerateClusterISOCreated()
+	case 204:
+		result := NewGenerateClusterISONoContent()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -42,6 +38,12 @@ func (o *GenerateClusterISOReader) ReadResponse(response runtime.ClientResponse,
 			return nil, err
 		}
 		return nil, result
+	case 409:
+		result := NewGenerateClusterISOConflict()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewGenerateClusterISOInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -54,35 +56,23 @@ func (o *GenerateClusterISOReader) ReadResponse(response runtime.ClientResponse,
 	}
 }
 
-// NewGenerateClusterISOCreated creates a GenerateClusterISOCreated with default headers values
-func NewGenerateClusterISOCreated() *GenerateClusterISOCreated {
-	return &GenerateClusterISOCreated{}
+// NewGenerateClusterISONoContent creates a GenerateClusterISONoContent with default headers values
+func NewGenerateClusterISONoContent() *GenerateClusterISONoContent {
+	return &GenerateClusterISONoContent{}
 }
 
-/*GenerateClusterISOCreated handles this case with default header values.
+/*GenerateClusterISONoContent handles this case with default header values.
 
-Created ISO
+Success.
 */
-type GenerateClusterISOCreated struct {
-	Payload *GenerateClusterISOCreatedBody
+type GenerateClusterISONoContent struct {
 }
 
-func (o *GenerateClusterISOCreated) Error() string {
-	return fmt.Sprintf("[POST /clusters/{clusterId}/downloads/image][%d] generateClusterISOCreated  %+v", 201, o.Payload)
+func (o *GenerateClusterISONoContent) Error() string {
+	return fmt.Sprintf("[POST /clusters/{clusterId}/downloads/image][%d] generateClusterISONoContent ", 204)
 }
 
-func (o *GenerateClusterISOCreated) GetPayload() *GenerateClusterISOCreatedBody {
-	return o.Payload
-}
-
-func (o *GenerateClusterISOCreated) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(GenerateClusterISOCreatedBody)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
+func (o *GenerateClusterISONoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }
@@ -129,6 +119,27 @@ func (o *GenerateClusterISONotFound) readResponse(response runtime.ClientRespons
 	return nil
 }
 
+// NewGenerateClusterISOConflict creates a GenerateClusterISOConflict with default headers values
+func NewGenerateClusterISOConflict() *GenerateClusterISOConflict {
+	return &GenerateClusterISOConflict{}
+}
+
+/*GenerateClusterISOConflict handles this case with default header values.
+
+Conflict
+*/
+type GenerateClusterISOConflict struct {
+}
+
+func (o *GenerateClusterISOConflict) Error() string {
+	return fmt.Sprintf("[POST /clusters/{clusterId}/downloads/image][%d] generateClusterISOConflict ", 409)
+}
+
+func (o *GenerateClusterISOConflict) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
 // NewGenerateClusterISOInternalServerError creates a GenerateClusterISOInternalServerError with default headers values
 func NewGenerateClusterISOInternalServerError() *GenerateClusterISOInternalServerError {
 	return &GenerateClusterISOInternalServerError{}
@@ -147,60 +158,5 @@ func (o *GenerateClusterISOInternalServerError) Error() string {
 
 func (o *GenerateClusterISOInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	return nil
-}
-
-/*GenerateClusterISOCreatedBody generate cluster i s o created body
-swagger:model GenerateClusterISOCreatedBody
-*/
-type GenerateClusterISOCreatedBody struct {
-
-	// image Id
-	// Format: uuid
-	ImageID strfmt.UUID `json:"imageId,omitempty"`
-}
-
-// Validate validates this generate cluster i s o created body
-func (o *GenerateClusterISOCreatedBody) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := o.validateImageID(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (o *GenerateClusterISOCreatedBody) validateImageID(formats strfmt.Registry) error {
-
-	if swag.IsZero(o.ImageID) { // not required
-		return nil
-	}
-
-	if err := validate.FormatOf("generateClusterISOCreated"+"."+"imageId", "body", "uuid", o.ImageID.String(), formats); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// MarshalBinary interface implementation
-func (o *GenerateClusterISOCreatedBody) MarshalBinary() ([]byte, error) {
-	if o == nil {
-		return nil, nil
-	}
-	return swag.WriteJSON(o)
-}
-
-// UnmarshalBinary interface implementation
-func (o *GenerateClusterISOCreatedBody) UnmarshalBinary(b []byte) error {
-	var res GenerateClusterISOCreatedBody
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
-	}
-	*o = res
 	return nil
 }

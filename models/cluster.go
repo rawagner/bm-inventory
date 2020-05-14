@@ -48,6 +48,9 @@ type Cluster struct {
 	// hosts
 	Hosts []*Host `json:"hosts" gorm:"foreignkey:ClusterID;association_foreignkey:ID"`
 
+	// image info
+	ImageInfo *ClusterAO1ImageInfo `json:"image_info,omitempty"`
+
 	// Virtual IP used for cluster ingress traffic
 	// Format: hostname
 	IngressVip strfmt.Hostname `json:"ingressVip,omitempty"`
@@ -115,6 +118,8 @@ func (m *Cluster) UnmarshalJSON(raw []byte) error {
 
 		Hosts []*Host `json:"hosts"`
 
+		ImageInfo *ClusterAO1ImageInfo `json:"image_info,omitempty"`
+
 		IngressVip strfmt.Hostname `json:"ingressVip,omitempty"`
 
 		InstallCompletedAt strfmt.DateTime `json:"installCompletedAt,omitempty"`
@@ -154,6 +159,8 @@ func (m *Cluster) UnmarshalJSON(raw []byte) error {
 	m.DNSVip = dataAO1.DNSVip
 
 	m.Hosts = dataAO1.Hosts
+
+	m.ImageInfo = dataAO1.ImageInfo
 
 	m.IngressVip = dataAO1.IngressVip
 
@@ -204,6 +211,8 @@ func (m Cluster) MarshalJSON() ([]byte, error) {
 
 		Hosts []*Host `json:"hosts"`
 
+		ImageInfo *ClusterAO1ImageInfo `json:"image_info,omitempty"`
+
 		IngressVip strfmt.Hostname `json:"ingressVip,omitempty"`
 
 		InstallCompletedAt strfmt.DateTime `json:"installCompletedAt,omitempty"`
@@ -240,6 +249,8 @@ func (m Cluster) MarshalJSON() ([]byte, error) {
 	dataAO1.DNSVip = m.DNSVip
 
 	dataAO1.Hosts = m.Hosts
+
+	dataAO1.ImageInfo = m.ImageInfo
 
 	dataAO1.IngressVip = m.IngressVip
 
@@ -301,6 +312,10 @@ func (m *Cluster) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateHosts(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateImageInfo(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -427,6 +442,24 @@ func (m *Cluster) validateHosts(formats strfmt.Registry) error {
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func (m *Cluster) validateImageInfo(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ImageInfo) { // not required
+		return nil
+	}
+
+	if m.ImageInfo != nil {
+		if err := m.ImageInfo.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("image_info")
+			}
+			return err
+		}
 	}
 
 	return nil
@@ -576,6 +609,69 @@ func (m *Cluster) MarshalBinary() ([]byte, error) {
 // UnmarshalBinary interface implementation
 func (m *Cluster) UnmarshalBinary(b []byte) error {
 	var res Cluster
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*m = res
+	return nil
+}
+
+// ClusterAO1ImageInfo cluster a o1 image info
+//
+// swagger:model ClusterAO1ImageInfo
+type ClusterAO1ImageInfo struct {
+
+	// created at
+	// Format: date-time
+	CreatedAt strfmt.DateTime `json:"created_at,omitempty"`
+
+	// The URL of the HTTP/S proxy that agents should use to access the discovery service
+	// http://\<user\>:\<password\>@\<server\>:\<port\>/
+	//
+	ProxyURL string `json:"proxy_url,omitempty"`
+
+	// SSH public key for debugging the installation
+	SSHPublicKey string `json:"ssh_public_key,omitempty"`
+}
+
+// Validate validates this cluster a o1 image info
+func (m *ClusterAO1ImageInfo) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateCreatedAt(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ClusterAO1ImageInfo) validateCreatedAt(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CreatedAt) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("image_info"+"."+"created_at", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (m *ClusterAO1ImageInfo) MarshalBinary() ([]byte, error) {
+	if m == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(m)
+}
+
+// UnmarshalBinary interface implementation
+func (m *ClusterAO1ImageInfo) UnmarshalBinary(b []byte) error {
+	var res ClusterAO1ImageInfo
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

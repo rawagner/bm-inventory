@@ -65,11 +65,6 @@ type DownloadClusterISOParams struct {
 
 	*/
 	ClusterID strfmt.UUID
-	/*ImageID
-	  The ID of a previously-created image
-
-	*/
-	ImageID strfmt.UUID
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,17 +115,6 @@ func (o *DownloadClusterISOParams) SetClusterID(clusterID strfmt.UUID) {
 	o.ClusterID = clusterID
 }
 
-// WithImageID adds the imageID to the download cluster i s o params
-func (o *DownloadClusterISOParams) WithImageID(imageID strfmt.UUID) *DownloadClusterISOParams {
-	o.SetImageID(imageID)
-	return o
-}
-
-// SetImageID adds the imageId to the download cluster i s o params
-func (o *DownloadClusterISOParams) SetImageID(imageID strfmt.UUID) {
-	o.ImageID = imageID
-}
-
 // WriteToRequest writes these params to a swagger request
 func (o *DownloadClusterISOParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -142,15 +126,6 @@ func (o *DownloadClusterISOParams) WriteToRequest(r runtime.ClientRequest, reg s
 	// path param clusterId
 	if err := r.SetPathParam("clusterId", o.ClusterID.String()); err != nil {
 		return err
-	}
-
-	// query param imageId
-	qrImageID := o.ImageID
-	qImageID := qrImageID.String()
-	if qImageID != "" {
-		if err := r.SetQueryParam("imageId", qImageID); err != nil {
-			return err
-		}
 	}
 
 	if len(res) > 0 {
