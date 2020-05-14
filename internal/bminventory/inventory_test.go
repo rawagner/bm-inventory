@@ -86,7 +86,7 @@ var _ = Describe("GenerateClusterISO", func() {
 			ClusterID:         *clusterId,
 			ImageCreateParams: &models.ImageCreateParams{},
 		})
-		Expect(generateReply).Should(BeAssignableToTypeOf(inventory.NewGenerateClusterISOCreated()))
+		Expect(generateReply).Should(BeAssignableToTypeOf(inventory.NewGenerateClusterISONoContent()))
 	})
 
 	It("success with proxy", func() {
@@ -97,7 +97,7 @@ var _ = Describe("GenerateClusterISO", func() {
 			ClusterID:         *clusterId,
 			ImageCreateParams: &models.ImageCreateParams{ProxyURL: "http://1.1.1.1:1234"},
 		})
-		Expect(generateReply).Should(BeAssignableToTypeOf(inventory.NewGenerateClusterISOCreated()))
+		Expect(generateReply).Should(BeAssignableToTypeOf(inventory.NewGenerateClusterISONoContent()))
 	})
 	It("cluster_not_exists", func() {
 		generateReply := bm.GenerateClusterISO(ctx, inventory.GenerateClusterISOParams{

@@ -44,24 +44,21 @@ var _ = Describe("system-test image tests", func() {
 		}
 		defer os.Remove(file.Name())
 
-		imgReply, err := bmclient.Inventory.GenerateClusterISO(ctx, &inventory.GenerateClusterISOParams{
+		_, err = bmclient.Inventory.GenerateClusterISO(ctx, &inventory.GenerateClusterISOParams{
 			ClusterID:         clusterID,
 			ImageCreateParams: &models.ImageCreateParams{},
 		})
 		Expect(err).NotTo(HaveOccurred())
 		_, err = bmclient.Inventory.DownloadClusterISO(ctx, &inventory.DownloadClusterISOParams{
 			ClusterID: clusterID,
-			ImageID:   imgReply.GetPayload().ImageID,
 		}, file)
 		Expect(err).NotTo(HaveOccurred())
 		s, err := file.Stat()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(s.Size()).ShouldNot(Equal(0))
 		By("non_existing_image")
-		dummyId := strfmt.UUID(uuid.New().String())
 		_, err = bmclient.Inventory.DownloadClusterISO(ctx, &inventory.DownloadClusterISOParams{
 			ClusterID: clusterID,
-			ImageID:   dummyId,
 		}, file)
 		Expect(err).Should(BeAssignableToTypeOf(inventory.NewDownloadClusterISONotFound()))
 	})
