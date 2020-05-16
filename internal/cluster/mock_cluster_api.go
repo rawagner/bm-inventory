@@ -75,11 +75,12 @@ func (m *MockRegistrationAPI) EXPECT() *MockRegistrationAPIMockRecorder {
 }
 
 // RegisterCluster mocks base method.
-func (m *MockRegistrationAPI) RegisterCluster(ctx context.Context, c *models.Cluster) error {
+func (m *MockRegistrationAPI) RegisterCluster(ctx context.Context, c *models.Cluster) (*models.Cluster, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RegisterCluster", ctx, c)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*models.Cluster)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // RegisterCluster indicates an expected call of RegisterCluster.
@@ -193,11 +194,12 @@ func (mr *MockAPIMockRecorder) RefreshStatus(ctx, c, db interface{}) *gomock.Cal
 }
 
 // RegisterCluster mocks base method.
-func (m *MockAPI) RegisterCluster(ctx context.Context, c *models.Cluster) error {
+func (m *MockAPI) RegisterCluster(ctx context.Context, c *models.Cluster) (*models.Cluster, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RegisterCluster", ctx, c)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*models.Cluster)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // RegisterCluster indicates an expected call of RegisterCluster.

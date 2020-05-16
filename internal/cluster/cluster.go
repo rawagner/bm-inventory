@@ -6,10 +6,11 @@ import (
 
 	"github.com/go-openapi/strfmt"
 
-	"github.com/filanov/bm-inventory/models"
 	"github.com/go-openapi/swag"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
+
+	"github.com/filanov/bm-inventory/models"
 )
 
 //go:generate mockgen -source=cluster.go -package=cluster -destination=mock_cluster_api.go
@@ -21,7 +22,7 @@ type StateAPI interface {
 
 type RegistrationAPI interface {
 	// Register a new cluster
-	RegisterCluster(ctx context.Context, c *models.Cluster) error
+	RegisterCluster(ctx context.Context, c *models.Cluster) (*models.Cluster, error)
 	//deregister cluster
 	DeregisterCluster(ctx context.Context, c *models.Cluster) error
 }
@@ -78,7 +79,7 @@ func (m *Manager) getCurrentState(status string) (StateAPI, error) {
 	return nil, fmt.Errorf("not supported cluster status: %s", status)
 }
 
-func (m *Manager) RegisterCluster(ctx context.Context, c *models.Cluster) error {
+func (m *Manager) RegisterCluster(ctx context.Context, c *models.Cluster) (*models.Cluster, error) {
 	return m.registrationAPI.RegisterCluster(ctx, c)
 }
 

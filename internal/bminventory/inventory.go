@@ -120,10 +120,6 @@ func NewBareMetalInventory(db *gorm.DB, log logrus.FieldLogger, hostApi host.API
 	return b
 }
 
-func buildHref(base, id string) *string {
-	return swag.String(fmt.Sprintf("%s/%ss/%s", baseHref, base, id))
-}
-
 // create discovery image generation job, return job name and error
 func (b *bareMetalInventory) createImageJob(cluster *models.Cluster, jobName, imgName, ignitionConfig string) *batch.Job {
 	return &batch.Job{
@@ -219,11 +215,7 @@ func (b *bareMetalInventory) getUserSshKey(params installer.GenerateClusterISOPa
 
 func (b *bareMetalInventory) RegisterCluster(ctx context.Context, params installer.RegisterClusterParams) middleware.Responder {
 	log := logutil.FromContext(ctx, b.log)
-	id := strfmt.UUID(uuid.New().String())
-	log.Infof("Register cluster: %s with id %s", swag.StringValue(params.NewClusterParams.Name), id)
 	cluster := models.Cluster{
-		ID:                       &id,
-		Href:                     buildHref(ResourceKindCluster, id.String()),
 		Kind:                     swag.String(ResourceKindCluster),
 		APIVip:                   params.NewClusterParams.APIVip,
 		BaseDNSDomain:            params.NewClusterParams.BaseDNSDomain,
@@ -239,14 +231,14 @@ func (b *bareMetalInventory) RegisterCluster(ctx context.Context, params install
 		UpdatedAt:                strfmt.DateTime{},
 	}
 
-	err := b.clusterApi.RegisterCluster(ctx, &cluster)
+	c, err := b.clusterApi.RegisterCluster(ctx, &cluster)
 	if err != nil {
 		log.Errorf("failed to register cluster %s ", swag.StringValue(params.NewClusterParams.Name))
 		return installer.NewRegisterClusterInternalServerError().
 			WithPayload(generateError(http.StatusInternalServerError))
 	}
 
-	return installer.NewRegisterClusterCreated().WithPayload(&cluster)
+	return installer.NewRegisterClusterCreated().WithPayload(c)
 }
 
 func (b *bareMetalInventory) DeregisterCluster(ctx context.Context, params installer.DeregisterClusterParams) middleware.Responder {
