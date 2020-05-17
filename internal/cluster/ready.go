@@ -32,7 +32,7 @@ func (r *readyState) RefreshStatus(ctx context.Context, c *models.Cluster, db *g
 			State:     clusterStatusInsufficient,
 			IsChanged: false}, errors.Errorf("cluster %s not found", c.ID)
 	}
-	mappedMastersByRole := mapMasterHostsByRole(c)
+	mappedMastersByRole := mapMasterHostsByStatus(c)
 
 	// Cluster is insufficient
 	mastersInKnown := mappedMastersByRole[host2.HostStatusKnown]

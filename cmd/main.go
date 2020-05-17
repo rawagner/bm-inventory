@@ -33,13 +33,13 @@ func init() {
 }
 
 var Options struct {
-	BMConfig               bminventory.Config
-	DBHost                 string `envconfig:"DB_HOST" default:"mariadb"`
-	DBPort                 string `envconfig:"DB_PORT" default:"3306"`
-	HWValidatorConfig      hardware.ValidatorCfg
-	JobConfig              job.Config
-	InstructionConfig      host.InstructionConfig
-	ClusterMonitorTimeLoop string `envconfig:"CLUSTER_MONITOR_TIME_LOOP" default:"500"` // Microsecond
+	BMConfig                    bminventory.Config
+	DBHost                      string `envconfig:"DB_HOST" default:"mariadb"`
+	DBPort                      string `envconfig:"DB_PORT" default:"3306"`
+	HWValidatorConfig           hardware.ValidatorCfg
+	JobConfig                   job.Config
+	InstructionConfig           host.InstructionConfig
+	ClusterStateMonitorTimeLoop time.Duration `envconfig:"CLUSTER_MONITOR_TIME_LOOP" default:"10000"` // Microsecond
 }
 
 func main() {
@@ -82,9 +82,9 @@ func main() {
 	hostApi := host.NewManager(log.WithField("pkg", "host-state"), db, hwValidator, instructionApi)
 	clusterApi := cluster.NewManager(log.WithField("pkg", "cluster-monitor"), db)
 
-	clusterMonitor := thread.New(log, "State Monitor", time.Duration(500)*time.Microsecond, clusterApi.ClusterMonitoring)
-	clusterMonitor.Start()
-	defer clusterMonitor.Stop()
+	clusterStateMonitor := thread.New(log, "State Monitor", Options.ClusterStateMonitorTimeLoop*time.Microsecond, clusterApi.ClusterMonitoring)
+	clusterStateMonitor.Start()
+	defer clusterStateMonitor.Stop()
 
 	jobApi := job.New(log.WithField("pkg", "k8s-job-wrapper"), kclient, Options.JobConfig)
 	bm := bminventory.NewBareMetalInventory(db, log.WithField("pkg", "Inventory"), hostApi, clusterApi, Options.BMConfig, jobApi)

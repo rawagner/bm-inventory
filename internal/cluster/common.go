@@ -61,7 +61,7 @@ func getKnownMastersNodesIds(c *models.Cluster, db *gorm.DB) ([]*strfmt.UUID, er
 	return masterNodesIds, nil
 }
 
-func mapMasterHostsByRole(c *models.Cluster) map[string][]*models.Host {
+func mapMasterHostsByStatus(c *models.Cluster) map[string][]*models.Host {
 	hostMap := make(map[string][]*models.Host)
 
 	for _, host := range c.Hosts {

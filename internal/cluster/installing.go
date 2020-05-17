@@ -29,8 +29,9 @@ func (i *installingState) RefreshStatus(ctx context.Context, c *models.Cluster, 
 	log := logutil.FromContext(ctx, i.log)
 	installationState, err := i.getClusterInstallationState(ctx, c)
 	if err != nil {
-		log.WithError(err).Errorf("cluster %s couldn't determine cluster installation state", c.ID)
+		return nil, errors.Errorf("couldn't determine cluster %s installation state", c.ID)
 	}
+
 	switch installationState {
 	case clusterStatusInstalled:
 		return updateState(clusterStatusInstalled, c, i.db, log)
@@ -42,10 +43,7 @@ func (i *installingState) RefreshStatus(ctx context.Context, c *models.Cluster, 
 			IsChanged: false,
 		}, nil
 	}
-	return &UpdateReply{
-		State:     clusterStatusInstalling,
-		IsChanged: false,
-	}, errors.Errorf("cluster % state transaction is not clear, installation state: %s ", c.ID, installationState)
+	return nil, errors.Errorf("cluster % state transaction is not clear, installation state: %s ", c.ID, installationState)
 }
 
 func (i *installingState) getClusterInstallationState(ctx context.Context, c *models.Cluster) (string, error) {
@@ -55,7 +53,7 @@ func (i *installingState) getClusterInstallationState(ctx context.Context, c *mo
 		return "", errors.Errorf("cluster %s not found", c.ID)
 	}
 
-	mappedMastersByRole := mapMasterHostsByRole(c)
+	mappedMastersByRole := mapMasterHostsByStatus(c)
 
 	// Cluster is in installed
 	mastersInInstalled, ok := mappedMastersByRole[host2.HostStatusInstalled]
