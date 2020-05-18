@@ -2,14 +2,15 @@ PWD = $(shell pwd)
 UID = $(shell id -u)
 
 TARGET := $(or ${TARGET},minikube)
+KUBECTL=kubectl -n assisted-installer
 
 ifeq ($(TARGET), minikube)
 define get_service
-minikube service --url $(1) | sed 's/http:\/\///g'
+minikube service --url $(1) -n assisted-installer | sed 's/http:\/\///g'
 endef
 else
 define get_service
-kubectl get service $(1) | grep $(1) | awk '{print $$4 ":" $$5}' | \
+kubectl get service $(1) -n assisted-installer | grep $(1) | awk '{print $$4 ":" $$5}' | \
 	awk '{split($$0,a,":"); print a[1] ":" a[2]}'
 endef
 endif
@@ -47,8 +48,11 @@ update: build
 	docker build -f Dockerfile.bm-inventory . -t $(SERVICE)
 	docker push $(SERVICE)
 
-deploy-all: create-build-dir deploy-mariadb deploy-s3 deploy-service
+deploy-all: create-build-dir deploy-namespace deploy-mariadb deploy-s3 deploy-service
 	echo "Deployment done"
+
+deploy-namespace:
+	python3 ./tools/deploy_namespace.py
 
 deploy-s3-configmap:
 	python3 tools/deploy_scality_configmap.py
@@ -87,21 +91,21 @@ unit-test:
 	go test -v $(shell go list ./... | grep -v subsystem) -cover
 
 subsystem-clean:
-	kubectl get pod -o name | grep create-image | xargs kubectl delete 1> /dev/null ; true
-	kubectl get pod -o name | grep generate-kubeconfig | xargs kubectl delete 1> /dev/null ; true
+	$(KUBECTL) get pod -o name | grep create-image | xargs $(KUBECTL) delete 1> /dev/null ; true
+	$(KUBECTL) get pod -o name | grep generate-kubeconfig | xargs $(KUBECTL) delete 1> /dev/null ; true
 
 clear-deployment:
-	kubectl delete deployments.apps bm-inventory 1> /dev/null ; true
-	kubectl delete deployments.apps mariadb 1> /dev/null ; true
-	kubectl delete deployments.apps scality 1> /dev/null ; true
-	kubectl get job -o name | grep create-image | xargs kubectl delete 1> /dev/null ; true
-	kubectl get pod -o name | grep create-image | xargs kubectl delete 1> /dev/null ; true
-	kubectl get job -o name | grep generate-kubeconfig | xargs kubectl delete 1> /dev/null ; true
-	kubectl get pod -o name | grep generate-kubeconfig | xargs kubectl delete 1> /dev/null ; true
-	kubectl delete service bm-inventory 1> /dev/null ; true
-	kubectl delete service mariadb 1> /dev/null ; true
-	kubectl delete service scality 1> /dev/null ; true
-	kubectl delete configmap bm-inventory-config 1> /dev/null ; true
-	kubectl delete configmap mariadb-config 1> /dev/null ; true
-	kubectl delete configmap s3-config 1> /dev/null ; true
-	kubectl delete configmap scality-config 1> /dev/null ; true
+	$(KUBECTL) delete deployments.apps bm-inventory 1> /dev/null ; true
+	$(KUBECTL) delete deployments.apps mariadb 1> /dev/null ; true
+	$(KUBECTL) delete deployments.apps scality 1> /dev/null ; true
+	$(KUBECTL)  get job -o name | grep create-image | xargs $(KUBECTL) delete 1> /dev/null ; true
+	$(KUBECTL) get pod -o name | grep create-image | xargs $(KUBECTL) delete 1> /dev/null ; true
+	$(KUBECTL) get job -o name | grep generate-kubeconfig | xargs $(KUBECTL) delete 1> /dev/null ; true
+	$(KUBECTL) get pod -o name | grep generate-kubeconfig | xargs $(KUBECTL) delete 1> /dev/null ; true
+	$(KUBECTL) delete service bm-inventory 1> /dev/null ; true
+	$(KUBECTL) delete service mariadb 1> /dev/null ; true
+	$(KUBECTL) delete service scality 1> /dev/null ; true
+	$(KUBECTL) delete configmap bm-inventory-config 1> /dev/null ; true
+	$(KUBECTL) delete configmap mariadb-config 1> /dev/null ; true
+	$(KUBECTL) delete configmap s3-config 1> /dev/null ; true
+	$(KUBECTL) delete configmap scality-config 1> /dev/null ; true

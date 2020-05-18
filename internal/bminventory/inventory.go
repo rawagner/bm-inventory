@@ -33,8 +33,6 @@ import (
 const baseHref = "/api/bm-inventory/v1"
 const kubeconfigPrefix = "generate-kubeconfig"
 
-const defaultJobNamespace = "default"
-
 const (
 	ClusterStatusReady      = "ready"
 	ClusterStatusInstalling = "installing"
@@ -58,6 +56,7 @@ type Config struct {
 	S3Bucket            string `envconfig:"S3_BUCKET" default:"test"`
 	AwsAccessKeyID      string `envconfig:"AWS_ACCESS_KEY_ID" default:"accessKey1"`
 	AwsSecretAccessKey  string `envconfig:"AWS_SECRET_ACCESS_KEY" default:"verySecretKey1"`
+	Namespace           string `envconfig:"NAMESPACE" default:"assisted-installer"`
 }
 
 const ignitionConfigFormat = `{
@@ -133,14 +132,14 @@ func (b *bareMetalInventory) createImageJob(cluster *models.Cluster, jobName, im
 		},
 		ObjectMeta: meta.ObjectMeta{
 			Name:      jobName,
-			Namespace: "default",
+			Namespace: b.Namespace,
 		},
 		Spec: batch.JobSpec{
 			BackoffLimit: swag.Int32(2),
 			Template: core.PodTemplateSpec{
 				ObjectMeta: meta.ObjectMeta{
 					Name:      jobName,
-					Namespace: "default",
+					Namespace: b.Namespace,
 				},
 				Spec: core.PodSpec{
 					Containers: []core.Container{
@@ -331,7 +330,7 @@ func (b *bareMetalInventory) GenerateClusterISO(ctx context.Context, params inst
 			WithPayload(generateError(http.StatusInternalServerError))
 	}
 
-	if err := b.job.Monitor(ctx, jobName, defaultJobNamespace); err != nil {
+	if err := b.job.Monitor(ctx, jobName, b.Namespace); err != nil {
 		log.WithError(err).Error("image creation failed")
 		return installer.NewGenerateClusterISOInternalServerError().
 			WithPayload(generateError(http.StatusInternalServerError))
@@ -445,7 +444,7 @@ func (b *bareMetalInventory) generateClusterInstallConfig(ctx context.Context, c
 			WithPayload(generateError(http.StatusInternalServerError))
 	}
 
-	if err := b.job.Monitor(ctx, jobName, defaultJobNamespace); err != nil {
+	if err := b.job.Monitor(ctx, jobName, b.Namespace); err != nil {
 		log.WithError(err).Errorf("Generating kubeconfig files %s failed for cluster %s", jobName, cluster.ID)
 		return installer.NewInstallClusterInternalServerError().
 			WithPayload(generateError(http.StatusInternalServerError))
@@ -762,14 +761,14 @@ func (b *bareMetalInventory) createKubeconfigJob(cluster *models.Cluster, jobNam
 		},
 		ObjectMeta: meta.ObjectMeta{
 			Name:      jobName,
-			Namespace: "default",
+			Namespace: b.Namespace,
 		},
 		Spec: batch.JobSpec{
 			BackoffLimit: swag.Int32(2),
 			Template: core.PodTemplateSpec{
 				ObjectMeta: meta.ObjectMeta{
 					Name:      jobName,
-					Namespace: "default",
+					Namespace: b.Namespace,
 				},
 				Spec: core.PodSpec{
 					Containers: []core.Container{
