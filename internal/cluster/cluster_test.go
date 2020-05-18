@@ -63,6 +63,9 @@ All supported case options:
 installing -> installing
 installing -> installed
 installing -> error
+
+known -> insufficient
+insufficient -> known
 */
 
 var _ = Describe("cluster monitor", func() {
@@ -78,18 +81,20 @@ var _ = Describe("cluster monitor", func() {
 	BeforeEach(func() {
 		db = prepareDB()
 		id = strfmt.UUID(uuid.New().String())
-		c = models.Cluster{
-			ID:     &id,
-			Status: swag.String("installing"),
-		}
-
-		Expect(db.Create(&c).Error).ShouldNot(HaveOccurred())
 		clusterApi = NewManager(getTestLog().WithField("pkg", "cluster-monitor"), db)
-
-		Expect(err).ShouldNot(HaveOccurred())
 	})
 
 	Context("from installing state", func() {
+
+		BeforeEach(func() {
+			c = models.Cluster{
+				ID:     &id,
+				Status: swag.String("installing"),
+			}
+
+			Expect(db.Create(&c).Error).ShouldNot(HaveOccurred())
+			Expect(err).ShouldNot(HaveOccurred())
+		})
 
 		It("installing -> installing", func() {
 			createHost(id, "installing", db)
@@ -134,7 +139,7 @@ var _ = Describe("cluster monitor", func() {
 			c = geCluster(id, db)
 			Expect(c.Status).Should(Equal(swag.String("error")))
 		})
-		It("installing -> error insufficient hosys", func() {
+		It("installing -> error insufficient hosts", func() {
 			createHost(id, "installing", db)
 			createHost(id, "installed", db)
 
@@ -143,9 +148,102 @@ var _ = Describe("cluster monitor", func() {
 			Expect(c.Status).Should(Equal(swag.String("error")))
 		})
 
-		AfterEach(func() {
-			db.Close()
+	})
+
+	Context("ghost hosts", func() {
+
+		Context("from insufficient state", func() {
+			BeforeEach(func() {
+
+				c = models.Cluster{
+					ID:     &id,
+					Status: swag.String("insufficient"),
+				}
+
+				Expect(db.Create(&c).Error).ShouldNot(HaveOccurred())
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("insufficient -> insufficient", func() {
+				createHost(id, "known", db)
+				clusterApi.ClusterMonitoring()
+				c = geCluster(id, db)
+				Expect(c.Status).Should(Equal(swag.String("insufficient")))
+			})
+			It("insufficient -> ready", func() {
+				createHost(id, "known", db)
+				createHost(id, "known", db)
+				createHost(id, "known", db)
+				clusterApi.ClusterMonitoring()
+				c = geCluster(id, db)
+				Expect(c.Status).Should(Equal(swag.String("ready")))
+			})
+			It("insufficient -> insufficient including hosts in discovering", func() {
+				createHost(id, "known", db)
+				createHost(id, "known", db)
+				createHost(id, "discovering", db)
+				clusterApi.ClusterMonitoring()
+				c = geCluster(id, db)
+				Expect(c.Status).Should(Equal(swag.String("insufficient")))
+			})
+			It("insufficient -> insufficient including hosts in error", func() {
+				createHost(id, "known", db)
+				createHost(id, "known", db)
+				createHost(id, "error", db)
+				clusterApi.ClusterMonitoring()
+				c = geCluster(id, db)
+				Expect(c.Status).Should(Equal(swag.String("insufficient")))
+			})
 		})
+		Context("from ready state", func() {
+			BeforeEach(func() {
+
+				c = models.Cluster{
+					ID:     &id,
+					Status: swag.String("ready"),
+				}
+
+				Expect(db.Create(&c).Error).ShouldNot(HaveOccurred())
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("ready -> ready", func() {
+				createHost(id, "known", db)
+				createHost(id, "known", db)
+				createHost(id, "known", db)
+				clusterApi.ClusterMonitoring()
+				c = geCluster(id, db)
+				Expect(c.Status).Should(Equal(swag.String("ready")))
+			})
+			It("ready -> insufficient", func() {
+				createHost(id, "known", db)
+				createHost(id, "known", db)
+				clusterApi.ClusterMonitoring()
+				c = geCluster(id, db)
+				Expect(c.Status).Should(Equal(swag.String("insufficient")))
+			})
+			It("ready -> insufficient one host is discovering", func() {
+				createHost(id, "known", db)
+				createHost(id, "known", db)
+				createHost(id, "discovering", db)
+				clusterApi.ClusterMonitoring()
+				c = geCluster(id, db)
+				Expect(c.Status).Should(Equal(swag.String("insufficient")))
+			})
+			It("ready -> insufficient including hosts in error", func() {
+				createHost(id, "known", db)
+				createHost(id, "known", db)
+				createHost(id, "error", db)
+				clusterApi.ClusterMonitoring()
+				c = geCluster(id, db)
+				Expect(c.Status).Should(Equal(swag.String("insufficient")))
+			})
+		})
+
+	})
+
+	AfterEach(func() {
+		db.Close()
 	})
 
 })

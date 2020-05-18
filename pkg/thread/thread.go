@@ -12,7 +12,7 @@ import (
 //    monitorFunc := func() {
 //        //do monitoring logic
 //    }
-//    monitor := thread.NewNew(log, "Health Monitor", time.Minute*2, monitorFunc)
+//    monitor := thread.New(log, "Health Monitor", time.Minute*2, monitorFunc)
 //    monitor.Start()
 //    defer monitor.Stop()
 //    ....

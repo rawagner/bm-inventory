@@ -121,12 +121,12 @@ func (m *Manager) ClusterMonitoring() {
 
 		if err != nil {
 			m.log.WithError(err).Errorf("failed to get cluster %s currentState", cluster.ID)
-			return
+			continue
 		}
 		stateReply, err := state.RefreshStatus(context.Background(), cluster, m.db)
 		if err != nil {
 			m.log.WithError(err).Errorf("failed to refresh cluster %s state", cluster.ID)
-			return
+			continue
 		}
 		if stateReply.IsChanged {
 			m.log.Infof("cluster %s updated to state %s via monitor", cluster.ID, stateReply.State)

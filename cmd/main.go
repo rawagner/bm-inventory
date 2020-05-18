@@ -39,7 +39,7 @@ var Options struct {
 	HWValidatorConfig           hardware.ValidatorCfg
 	JobConfig                   job.Config
 	InstructionConfig           host.InstructionConfig
-	ClusterStateMonitorTimeLoop time.Duration `envconfig:"CLUSTER_MONITOR_TIME_LOOP" default:"10000"` // Microsecond
+	ClusterStateMonitorTimeLoop time.Duration `envconfig:"CLUSTER_MONITOR_TIME_LOOP" default:"10s"` // Microsecond
 }
 
 func main() {
@@ -80,9 +80,9 @@ func main() {
 	hwValidator := hardware.NewValidator(Options.HWValidatorConfig)
 	instructionApi := host.NewInstructionManager(log, db, hwValidator, Options.InstructionConfig)
 	hostApi := host.NewManager(log.WithField("pkg", "host-state"), db, hwValidator, instructionApi)
-	clusterApi := cluster.NewManager(log.WithField("pkg", "cluster-monitor"), db)
+	clusterApi := cluster.NewManager(log.WithField("pkg", "cluster-state"), db)
 
-	clusterStateMonitor := thread.New(log, "State Monitor", Options.ClusterStateMonitorTimeLoop*time.Microsecond, clusterApi.ClusterMonitoring)
+	clusterStateMonitor := thread.New(log.WithField("pkg", "cluster-monitor"), "State Monitor", Options.ClusterStateMonitorTimeLoop*time.Microsecond, clusterApi.ClusterMonitoring)
 	clusterStateMonitor.Start()
 	defer clusterStateMonitor.Stop()
 
