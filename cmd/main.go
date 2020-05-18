@@ -49,7 +49,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	port := flag.String("port", "8090", "define port that the service will listen to") //nolint:staticcheck
+	port := flag.String("port", "8090", "define port that the service will listen to")
 	flag.Parse()
 
 	log.Println("Starting bm service")
@@ -68,7 +68,7 @@ func main() {
 		log.Fatal("Failed to add K8S scheme", err)
 	}
 
-	kclient, err := client.New(config.GetConfigOrDie(), client.Options{Scheme: scheme}) //nolint:staticcheck
+	kclient, err := client.New(config.GetConfigOrDie(), client.Options{Scheme: scheme})
 	if err != nil {
 		log.Fatal("failed to create client:", err)
 	}
